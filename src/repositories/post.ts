@@ -1,4 +1,14 @@
-const posts = [
+import type { CreatePostDto } from '../dto/post_dto.js';
+
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+  author: string;
+  category: string;
+}
+
+const posts: Post[] = [
   {
     id: 1,
     title: 'Вступ до Node.js',
@@ -36,10 +46,10 @@ const posts = [
   },
 ];
 
-let nextId = posts.length + 1;
+let nextId: number = posts.length + 1;
 
 
-function getAll(category, take) {
+const getAll=(category?: string, take?: number) : Post[]=> {
   let result = posts;
 
   if (category) {
@@ -53,14 +63,14 @@ function getAll(category, take) {
   return result;
 }
 
-function getById(id) {
+const getById=(id: number): Post | undefined =>{
   return posts.find((post) => post.id === id);
 }
 
 
-function addPost(data) {
+const addPost = (data: CreatePostDto): Promise<Post> =>{
   return new Promise((resolve) => {
-    const newPost = {
+    const newPost: Post = {
       id: nextId++,
       title: data.title,
       content: data.content,

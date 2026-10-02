@@ -1,18 +1,20 @@
-
 import postRepository from '../repositories/post.js';
+import type { Post } from '../repositories/post.js';
+import type { CreatePostDto } from '../dto/post_dto.js';
 
 class NotFoundError extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message);
     this.name = 'NotFoundError';
   }
 }
 
-function getPosts({ category, take } = {}) {
+const getPosts = (
+  { category, take }: { category?: string | undefined; take?: number | undefined } = {}): Post[] => {
   return postRepository.getAll(category, take);
-}
+};
 
-function getPost(id) {
+const getPost=(id: number) => {
   const post = postRepository.getById(id);
 
   if (!post) {
@@ -22,7 +24,7 @@ function getPost(id) {
   return post;
 }
 
-function createPost(data) {
+const createPost=(data: CreatePostDto) => {
   return postRepository.addPost(data);
 }
 
