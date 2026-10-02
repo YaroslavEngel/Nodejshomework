@@ -1,6 +1,8 @@
-import postService from '../services/post.js';
+import type { Request, Response } from 'express';
+import postService from '../../services/post.js';
+import type { CreatePostDto, GetPostsQueryDto } from '../../dto/post_dto.js';
 
-function getPosts(req, res) {
+const getPosts = (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => {
   const { category, take } = req.query;
 
   if (take !== undefined && (!/^\d+$/.test(take) || Number(take) <= 0)) {
@@ -16,9 +18,9 @@ function getPosts(req, res) {
   });
 
   return res.status(200).json(posts);
-}
+  };
 
-function getPostById(req, res) {
+  const getPostById = (req: Request<{ id: string }>, res: Response): Response => {
   const { id } = req.params;
 
   if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
@@ -35,12 +37,12 @@ function getPostById(req, res) {
 
     throw error;
   }
-}
+};
 
-async function createPost(req, res) {
+const createPost = async (req: Request<{}, {}, CreatePostDto>, res: Response): Promise<Response> => {
   const { title, content, author, category } = req.body ?? {};
 
-  const errors = [];
+  const errors: string[] = [];
 
   if (!title || typeof title !== 'string' || !title.trim()) {
     errors.push('"title" is required and must be a non-empty string');
@@ -68,7 +70,7 @@ async function createPost(req, res) {
   const newPost = await postService.createPost({ title, content, author, category });
 
   return res.status(201).json(newPost);
-}
+};
 
 export default {
   getPosts,

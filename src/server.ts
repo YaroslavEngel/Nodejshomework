@@ -1,5 +1,6 @@
 import express from 'express';
-import postRouter from './routers/post.js';
+import type { Request, Response, NextFunction } from 'express';
+import postRouter from './transport/routers/post.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -7,11 +8,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use('/', postRouter);
 
-app.use((res) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-app.use((err, res) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
   res.status(500).json({ message: 'Internal server error' });
 });
