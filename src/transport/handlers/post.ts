@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express';
-import postService from '../../services/post.js';
+import { createPostRepository } from '../../repositories/post.js';
+import { createPostService } from '../../services/post.js';
 import type { CreatePostDto, GetPostsQueryDto } from '../../dto/post_dto.js';
+
+const postRepository = createPostRepository();
+const postService = createPostService(postRepository);
 
 const getPosts = (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => {
   const { category, take } = req.query;
@@ -18,9 +22,9 @@ const getPosts = (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => 
   });
 
   return res.status(200).json(posts);
-  };
+};
 
-  const getPostById = (req: Request<{ id: string }>, res: Response): Response => {
+const getPostById = (req: Request<{ id: string }>, res: Response): Response => {
   const { id } = req.params;
 
   if (!Number.isInteger(Number(id)) || Number(id) <= 0) {

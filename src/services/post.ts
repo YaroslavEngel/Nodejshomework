@@ -1,36 +1,30 @@
-import postRepository from '../repositories/post.js';
-import type { Post } from '../repositories/post.js';
-import type { CreatePostDto } from '../dto/post_dto.js';
+import type { PostRepository } from '../domain/post/repository.js';
+import type { PostService } from './post.types.js';
+import { NotFoundError } from './post.types.js';
 
-class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'NotFoundError';
-  }
-}
+export const createPostService = (postRepository: PostRepository): PostService => {
+  const getPosts: PostService['getPosts'] = ({ category, take } = {}) => {
+    return postRepository.getAll(category, take);
+  };
 
-const getPosts = (
-  { category, take }: { category?: string | undefined; take?: number | undefined } = {}): Post[] => {
-  return postRepository.getAll(category, take);
-};
+  const getPost: PostService['getPost'] = (id) => {
+    const post = postRepository.getById(id);
 
-const getPost=(id: number) => {
-  const post = postRepository.getById(id);
+    if (!post) {
+      throw new NotFoundError(`Post with id ${id} was not found`);
+    }
 
-  if (!post) {
-    throw new NotFoundError(`Post with id ${id} was not found`);
-  }
+    return post;
+  };
 
-  return post;
-}
+  const createPost: PostService['createPost'] = (data) => {
+    return postRepository.addPost(data);
+  };
 
-const createPost=(data: CreatePostDto) => {
-  return postRepository.addPost(data);
-}
-
-export default {
-  getPosts,
-  getPost,
-  createPost,
-  NotFoundError,
+  return {
+    getPosts,
+    getPost,
+    createPost,
+    NotFoundError,
+  };
 };
