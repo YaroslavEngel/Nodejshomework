@@ -2,8 +2,8 @@ import type { Post } from '../domain/post/entity.js';
 import type { CreatePostDto } from '../dto/post_dto.js';
 
 export interface PostService {
-  getPosts(params?: { category?: string | undefined; take?: number | undefined }): Post[];
-  getPost(id: number): Post;
+  getPosts(params?: { category?: string | undefined; take?: number | undefined }): Promise<Post[]>;
+  getPost(id: number): Promise<Post>;
   createPost(data: CreatePostDto): Promise<Post>;
   NotFoundError: typeof NotFoundError;
 }

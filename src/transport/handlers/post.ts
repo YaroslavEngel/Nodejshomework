@@ -3,7 +3,7 @@ import type { PostService } from '../../services/post.types.js';
 import type { CreatePostDto, GetPostsQueryDto } from '../../dto/post_dto.js';
 
 export const createPostHandler = (postService: PostService) => {
-  const getPosts = (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => {
+  const getPosts = async (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => {
     const { category, take } = req.query;
 
     if (take !== undefined && (!/^\d+$/.test(take) || Number(take) <= 0)) {
@@ -13,7 +13,7 @@ export const createPostHandler = (postService: PostService) => {
       });
     }
 
-    const posts = postService.getPosts({
+    const posts = await postService.getPosts({
       category,
       take: take !== undefined ? Number(take) : undefined,
     });
@@ -21,7 +21,7 @@ export const createPostHandler = (postService: PostService) => {
     return res.status(200).json(posts);
   };
 
-  const getPostById = (req: Request<{ id: string }>, res: Response): Response => {
+  const getPostById = async (req: Request<{ id: string }>, res: Response): Promise<Response> => {
     const { id } = req.params;
 
     if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
@@ -29,7 +29,7 @@ export const createPostHandler = (postService: PostService) => {
     }
 
     try {
-      const post = postService.getPost(Number(id));
+      const post = await postService.getPost(Number(id));
       return res.status(200).json(post);
     } catch (error) {
       if (error instanceof postService.NotFoundError) {

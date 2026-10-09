@@ -7,8 +7,8 @@ export const createPostService = (postRepository: PostRepository): PostService =
     return postRepository.getAll(category, take);
   };
 
-  const getPost: PostService['getPost'] = (id) => {
-    const post = postRepository.getById(id);
+  const getPost: PostService['getPost'] = async (id) => {
+    const post = await postRepository.getById(id);
 
     if (!post) {
       throw new NotFoundError(`Post with id ${id} was not found`);

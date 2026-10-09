@@ -1,84 +1,45 @@
+import type { db as prismaDb } from '../prisma/db.js';
 import type { Post } from '../domain/post/entity.js';
 import type { PostRepository } from '../domain/post/repository.js';
 import type { CreatePostDto } from '../dto/post_dto.js';
 
-export const createPostRepository = (): PostRepository => {
-  const posts: Post[] = [
-    {
-      id: 1,
-      title: 'Вступ до Node.js',
-      content: "Node.js — це середовище виконання JavaScript, побудоване на движку V8 від Chrome.",
-      author: 'Олена',
-      category: 'programming',
-    },
-    {
-      id: 2,
-      title: 'Розуміння Express Middleware',
-      content: 'Middleware-функції мають доступ до об\'єктів запиту та відповіді.',
-      author: 'Іван',
-      category: 'programming',
-    },
-    {
-      id: 3,
-      title: 'Найкращі способи заварювання кави',
-      content: 'Пуровер, френч-прес та еспресо розкривають різні смакові відтінки.',
-      author: 'Марія',
-      category: 'lifestyle',
-    },
-    {
-      id: 4,
-      title: 'Початок роботи з REST API',
-      content: 'REST — це архітектурний стиль для проєктування мережевих застосунків.',
-      author: 'Петро',
-      category: 'programming',
-    },
-    {
-      id: 5,
-      title: 'Подорожі з обмеженим бюджетом',
-      content: "Щоб побачити світ, не обов'язково мати багато грошей.",
-      author: 'Олена',
-      category: 'travel',
-    },
-  ];
+type Db = typeof prismaDb;
 
-  let nextId = posts.length + 1;
+export const createPostRepository = (db: Db): PostRepository => {
+  const getAll = async (
+    category?: string | undefined,
+    take?: number | undefined,
+  ): Promise<Post[]> => {
+    const posts = db.orm.public.Post;
 
-  const getAll = (category?: string | undefined, take?: number | undefined): Post[] => {
-    let result = posts;
+    if (category && take !== undefined) {
+      return await posts.where({ category }).orderBy((p) => p.id.asc()).limit(take).all();
+    }
 
     if (category) {
-      result = result.filter((post) => post.category === category);
+      return await posts.where({ category }).orderBy((p) => p.id.asc()).all();
     }
 
     if (take !== undefined) {
-      result = result.slice(0, take);
+      return await posts.orderBy((p) => p.id.asc()).limit(take).all();
     }
 
-    return result;
+    return await posts.orderBy((p) => p.id.asc()).all();
   };
 
-  const getById = (id: number): Post | undefined => {
-    return posts.find((post) => post.id === id);
+  const getById = async (id: number): Promise<Post | undefined> => {
+    const post = await db.orm.public.Post.first({ id });
+    return post ?? undefined;
   };
 
-  const addPost = (data: CreatePostDto): Promise<Post> => {
-    return new Promise((resolve) => {
-      const newPost: Post = {
-        id: nextId++,
-        title: data.title,
-        content: data.content,
-        author: data.author ?? 'Anonymous',
-        category: data.category ?? 'general',
-      };
-
-      posts.push(newPost);
-      resolve(newPost);
+  const addPost = async (data: CreatePostDto): Promise<Post> => {
+    return await db.orm.public.Post.create({
+      title: data.title,
+      content: data.content,
+      author: data.author ?? 'Anonymous',
+      category: data.category ?? 'general',
     });
   };
 
-  return {
-    getAll,
-    getById,
-    addPost,
-  };
+  return { getAll, getById, addPost };
 };
