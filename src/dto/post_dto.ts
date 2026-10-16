@@ -2,7 +2,7 @@ export interface CreatePostDto {
   title: string;
   content: string;
   author?: string | undefined;
-  category?: string | undefined;
+  categoryId: number;
 }
 
 export interface GetPostsQueryDto {

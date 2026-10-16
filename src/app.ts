@@ -1,10 +1,14 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { createPostRepository } from './repositories/post.js';
-import { createPostService } from './services/post.js';
-import { createPostHandler } from './transport/handlers/post.js';
-import { createPostRouter } from './transport/routers/post.js';
 import { db } from './prisma/db.js';
+import { createPostRepository } from './repositories/post.js';
+import { createCategoryRepository } from './repositories/category.js';
+import { createPostService } from './services/post.js';
+import { createCategoryService } from './services/category.js';
+import { createPostHandler } from './transport/handlers/post.js';
+import { createCategoryHandler } from './transport/handlers/category.js';
+import { createPostRouter } from './transport/routers/post.js';
+import { createCategoryRouter } from './transport/routers/category.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,12 +16,19 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const postRepository = createPostRepository(db);
-const postService = createPostService(postRepository);
-const postHandler = createPostHandler(postService);
-const postRouter = createPostRouter(postHandler);
+const categoryRepository = createCategoryRepository(db);
 
+const postService = createPostService(postRepository, categoryRepository);
+const categoryService = createCategoryService(categoryRepository);
+
+const postHandler = createPostHandler(postService);
+const categoryHandler = createCategoryHandler(categoryService);
+
+const postRouter = createPostRouter(postHandler);
+const categoryRouter = createCategoryRouter(categoryHandler);
 
 app.use('/', postRouter);
+app.use('/', categoryRouter);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ message: 'Route not found' });

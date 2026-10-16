@@ -11,34 +11,66 @@ export const createPostRepository = (db: Db): PostRepository => {
     take?: number | undefined,
   ): Promise<Post[]> => {
     const posts = db.orm.public.Post;
-
-    if (category && take !== undefined) {
-      return await posts.where({ category }).orderBy((p) => p.id.asc()).limit(take).all();
-    }
+    let categoryId: number | undefined;
 
     if (category) {
-      return await posts.where({ category }).orderBy((p) => p.id.asc()).all();
+      const found = await db.orm.public.Category.first({ name: category });
+
+      if (!found) {
+        return [];
+      }
+
+      categoryId = found.id;
+    }
+
+    if (categoryId !== undefined && take !== undefined) {
+      return await posts
+        .where({ categoryId })
+        .include('category')
+        .orderBy((p) => p.id.asc())
+        .limit(take)
+        .all();
+    }
+
+    if (categoryId !== undefined) {
+      return await posts
+        .where({ categoryId })
+        .include('category')
+        .orderBy((p) => p.id.asc())
+        .all();
     }
 
     if (take !== undefined) {
-      return await posts.orderBy((p) => p.id.asc()).limit(take).all();
+      return await posts
+        .include('category')
+        .orderBy((p) => p.id.asc())
+        .limit(take)
+        .all();
     }
 
-    return await posts.orderBy((p) => p.id.asc()).all();
+    return await posts.include('category').orderBy((p) => p.id.asc()).all();
   };
 
   const getById = async (id: number): Promise<Post | undefined> => {
-    const post = await db.orm.public.Post.first({ id });
+    const post = await db.orm.public.Post.where({ id }).include('category').first();
     return post ?? undefined;
   };
 
   const addPost = async (data: CreatePostDto): Promise<Post> => {
-    return await db.orm.public.Post.create({
+    const created = await db.orm.public.Post.create({
       title: data.title,
       content: data.content,
       author: data.author ?? 'Anonymous',
-      category: data.category ?? 'general',
+      categoryId: data.categoryId,
     });
+
+    const post = await getById(created.id);
+
+    if (!post) {
+      throw new Error('Post was not found after creation');
+    }
+
+    return post;
   };
 
   return { getAll, getById, addPost };

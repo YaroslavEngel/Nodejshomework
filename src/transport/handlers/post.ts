@@ -3,7 +3,10 @@ import type { PostService } from '../../services/post.types.js';
 import type { CreatePostDto, GetPostsQueryDto } from '../../dto/post_dto.js';
 
 export const createPostHandler = (postService: PostService) => {
-  const getPosts = async (req: Request<{}, {}, {}, GetPostsQueryDto>, res: Response) => {
+  const getPosts = async (
+    req: Request<{}, {}, {}, GetPostsQueryDto>,
+    res: Response,
+  ): Promise<Response> => {
     const { category, take } = req.query;
 
     if (take !== undefined && (!/^\d+$/.test(take) || Number(take) <= 0)) {
@@ -21,11 +24,14 @@ export const createPostHandler = (postService: PostService) => {
     return res.status(200).json(posts);
   };
 
-  const getPostById = async (req: Request<{ id: string }>, res: Response): Promise<Response> => {
+  const getPostById = async (
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<Response> => {
     const { id } = req.params;
 
     if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
-      return res.status(422).json({ message: 'Validation error' });
+      return res.status(400).json({ message: 'Invalid id' });
     }
 
     try {
@@ -40,8 +46,15 @@ export const createPostHandler = (postService: PostService) => {
     }
   };
 
-  const createPost = async (req: Request<{}, {}, CreatePostDto>, res: Response): Promise<Response> => {
-    const { title, content, author, category } = req.body ?? {};
+  const createPost = async (
+    req: Request<{}, {}, CreatePostDto>,
+    res: Response,
+  ): Promise<Response> => {
+    const { title, content, author, categoryId } = req.body ?? {};
+
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      return res.status(400).json({ message: 'categoryId must be a positive integer' });
+    }
 
     const errors: string[] = [];
 
@@ -57,10 +70,6 @@ export const createPostHandler = (postService: PostService) => {
       errors.push('"author" must be a string');
     }
 
-    if (category !== undefined && typeof category !== 'string') {
-      errors.push('"category" must be a string');
-    }
-
     if (errors.length > 0) {
       return res.status(422).json({
         message: 'Validation error',
@@ -68,9 +77,16 @@ export const createPostHandler = (postService: PostService) => {
       });
     }
 
-    const newPost = await postService.createPost({ title, content, author, category });
+    try {
+      const newPost = await postService.createPost({ title, content, author, categoryId });
+      return res.status(201).json(newPost);
+    } catch (error) {
+      if (error instanceof postService.NotFoundError) {
+        return res.status(404).json({ message: error.message });
+      }
 
-    return res.status(201).json(newPost);
+      throw error;
+    }
   };
 
   return {
