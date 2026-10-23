@@ -1,8 +1,8 @@
 export interface CreatePostDto {
   title: string;
   content: string;
-  author?: string | undefined;
   categoryId: number;
+  authorId: number; 
 }
 
 export interface GetPostsQueryDto {

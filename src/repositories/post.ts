@@ -27,6 +27,7 @@ export const createPostRepository = (db: Db): PostRepository => {
       return await posts
         .where({ categoryId })
         .include('category')
+        .include('author', (u) => u.select('id', 'email'))
         .orderBy((p) => p.id.asc())
         .limit(take)
         .all();
@@ -36,6 +37,7 @@ export const createPostRepository = (db: Db): PostRepository => {
       return await posts
         .where({ categoryId })
         .include('category')
+        .include('author', (u) => u.select('id', 'email'))
         .orderBy((p) => p.id.asc())
         .all();
     }
@@ -43,16 +45,26 @@ export const createPostRepository = (db: Db): PostRepository => {
     if (take !== undefined) {
       return await posts
         .include('category')
+        .include('author', (u) => u.select('id', 'email'))
         .orderBy((p) => p.id.asc())
         .limit(take)
         .all();
     }
 
-    return await posts.include('category').orderBy((p) => p.id.asc()).all();
+    return await posts
+      .include('category')
+      .include('author', (u) => u.select('id', 'email'))
+      .orderBy((p) => p.id.asc())
+      .all();
   };
 
   const getById = async (id: number): Promise<Post | undefined> => {
-    const post = await db.orm.public.Post.where({ id }).include('category').first();
+    const post = await db.orm.public.Post
+      .where({ id })
+      .include('category')
+      .include('author', (u) => u.select('id', 'email'))
+      .first();
+
     return post ?? undefined;
   };
 
@@ -60,8 +72,8 @@ export const createPostRepository = (db: Db): PostRepository => {
     const created = await db.orm.public.Post.create({
       title: data.title,
       content: data.content,
-      author: data.author ?? 'Anonymous',
       categoryId: data.categoryId,
+      authorId: data.authorId,
     });
 
     const post = await getById(created.id);

@@ -50,10 +50,14 @@ export const createPostHandler = (postService: PostService) => {
     req: Request<{}, {}, CreatePostDto>,
     res: Response,
   ): Promise<Response> => {
-    const { title, content, author, categoryId } = req.body ?? {};
+    const { title, content, categoryId, authorId } = req.body ?? {};
 
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
       return res.status(400).json({ message: 'categoryId must be a positive integer' });
+    }
+
+    if (!Number.isInteger(authorId) || authorId <= 0) {
+      return res.status(400).json({ message: 'authorId must be a positive integer' });
     }
 
     const errors: string[] = [];
@@ -66,10 +70,6 @@ export const createPostHandler = (postService: PostService) => {
       errors.push('"content" is required and must be a non-empty string');
     }
 
-    if (author !== undefined && typeof author !== 'string') {
-      errors.push('"author" must be a string');
-    }
-
     if (errors.length > 0) {
       return res.status(422).json({
         message: 'Validation error',
@@ -78,7 +78,7 @@ export const createPostHandler = (postService: PostService) => {
     }
 
     try {
-      const newPost = await postService.createPost({ title, content, author, categoryId });
+      const newPost = await postService.createPost({ title, content, categoryId, authorId });
       return res.status(201).json(newPost);
     } catch (error) {
       if (error instanceof postService.NotFoundError) {

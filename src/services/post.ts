@@ -1,11 +1,13 @@
 import type { PostRepository } from '../domain/post/repository.js';
 import type { CategoryRepository } from '../domain/category/repository.js';
+import type { UserRepository } from '../domain/user/repository.js';
 import type { PostService } from './post.types.js';
 import { NotFoundError } from '../domain/errors.js';
 
 export const createPostService = (
   postRepository: PostRepository,
   categoryRepository: CategoryRepository,
+  userRepository: UserRepository,
 ): PostService => {
   const getPosts: PostService['getPosts'] = ({ category, take } = {}) => {
     return postRepository.getAll(category, take);
@@ -26,6 +28,12 @@ export const createPostService = (
 
     if (!category) {
       throw new NotFoundError(`Category with id ${data.categoryId} was not found`);
+    }
+
+    const author = await userRepository.getById(data.authorId);
+
+    if (!author) {
+      throw new NotFoundError(`User with id ${data.authorId} was not found`);
     }
 
     return postRepository.addPost(data);
