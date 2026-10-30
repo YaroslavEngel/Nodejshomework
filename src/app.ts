@@ -3,6 +3,7 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
+import cors from 'cors';
 import { db } from './prisma/db.js';
 import { createPostRepository } from './repositories/post.js';
 import { createCategoryRepository } from './repositories/category.js';
@@ -26,6 +27,7 @@ const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
   throw new Error('JWT_SECRET is not set in .env');
 }
+app.use(cors({ origin: 'http://localhost:5173' }));
 
 app.use(express.json());
 
